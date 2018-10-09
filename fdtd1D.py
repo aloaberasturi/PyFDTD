@@ -2,6 +2,7 @@
 
 import math
 import scipy.constants
+import numpy
 
 #------Physical Constants-------------------------------------------------------
 
@@ -13,12 +14,12 @@ eps0 = scipy.constants.epsilon_0
 
 L = 10
 dx = 0.5
-nP = [L/dx, L/dx-1]
-sP = numPoints/2
-CLFN = 0.8
+nP = [int(L // dx),int(L // dx)-1]
+sP = nP[0]/2
+CFLN = 0.8
 dt = CFLN*dx/(math.sqrt(3)*c0)
 totalTime = L/c0*2
-timeSteps = totalTime // dt
+timeSteps = int(totalTime / dt)
 spread = 1.0/math.sqrt(2.0)
 
 #------Update Coefficients------------------------------------------------------
@@ -26,18 +27,14 @@ spread = 1.0/math.sqrt(2.0)
 cE = dt / (eps0 * dx)
 cH = dt / (mu0  * dx)
 
-#------Initial Conditions-------------------------------------------------------
+#------Initial and PEC Conditions-------------------------------------------------------
 
-for i in range(0,numPoints[0]):
-
-    e[i] = 0.0
-
-for i in range(0, numPoints[1]):
-    h[i] = 0.0
+e = numpy.zeros(nP[0])
+h = numpy.zeros(nP[1])
 
 #------Temporal Loop------------------------------------------------------------
-
-t = 0.0
+t0 = 0.0
+t  = 0.0
 
 for i in range(0, timeSteps):
    
@@ -50,8 +47,6 @@ for i in range(0, timeSteps):
         e[j] = e[j] + cE * (h[j] - h[j-1])    
 
     e[sP] = e[sP] + math.exp(-0.5*math.pow((t-t0)/spread, 2))   
-
-
     t += dt
     
 
