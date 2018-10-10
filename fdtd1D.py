@@ -3,6 +3,8 @@
 import math
 import scipy.constants
 import numpy
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 #------Physical Constants-------------------------------------------------------
 
@@ -14,8 +16,8 @@ eps0 = scipy.constants.epsilon_0
 
 L = 10
 dx = 0.5
-nP = [int(L // dx),int(L // dx)-1]
-sP = nP[0]/2
+nP = [int(L / dx),int(L / dx)-1]
+sP = int(nP[0]/2)
 CFLN = 0.8
 dt = CFLN*dx/(math.sqrt(3)*c0)
 totalTime = L/c0*2
@@ -24,8 +26,8 @@ spread = 1.0/math.sqrt(2.0)
 
 #------Update Coefficients------------------------------------------------------
 
-cE = dt / (eps0 * dx)
-cH = dt / (mu0  * dx)
+cE = -dt / (eps0 * dx)
+cH =  dt / (mu0  * dx)
 
 #------Initial and PEC Conditions-------------------------------------------------------
 
@@ -50,3 +52,7 @@ for i in range(0, timeSteps):
     t += dt
     
 
+
+# ==== Post-processing ========================================================
+
+# --- Creates animation ---
