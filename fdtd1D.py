@@ -2,57 +2,122 @@
 
 import math
 import scipy.constants
-import numpy
+import numpy 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+#   TODO Hay algo en la fuente de campo magnetico que falla
+
 #------Physical Constants-------------------------------------------------------
 
-c0 = scipy.constants.speed_of_light
+c0   = scipy.constants.speed_of_light
 mu0  = scipy.constants.mu_0
 eps0 = scipy.constants.epsilon_0
+imp0 = math.sqrt(mu0 / eps0)
+
+#-------Source Conditions-------------------------------------------------------
+
+delay  = 8e-9
+spread = 2e-9
 
 #------Grid Conditions----------------------------------------------------------
 
-L = 10
-dx = 0.5
-nP = [int(L / dx),int(L / dx)-1]
-sP = int(nP[0]/2)
-CFLN = 0.8
-dt = CFLN*dx/(math.sqrt(3)*c0)
-totalTime = L/c0*2
+L         = 10.0
+dx        = 0.05
+nP        = int(L / dx)+1
+sP        = int((L/8)/dx)
+CFLN      = 0.99
+dt        = CFLN * dx / c0
+totalTime = L / c0 * 2 
 timeSteps = int(totalTime / dt)
-spread = 1.0/math.sqrt(2.0)
+nSamples  = int( math.floor(totalTime/dt) )
+
 
 #------Update Coefficients------------------------------------------------------
 
-cE = -dt / (eps0 * dx)
-cH =  dt / (mu0  * dx)
+cE = dt / (eps0 * dx)
+cH = dt / (mu0  * dx)
 
-#------Initial and PEC Conditions-------------------------------------------------------
+#------Initial Conditions-----------------------------------------------
 
-e = numpy.zeros(nP[0])
-h = numpy.zeros(nP[1])
+gridE     = numpy.linspace(0,      L,        num=L/dx+1, endpoint=True)
+gridH     = numpy.linspace(dx/2.0, L-dx/2.0, num=L/dx,   endpoint=True)
+e         = numpy.zeros(nP)
+h         = numpy.zeros(nP-1)
+
+#------Probes-------------------------------------------------------------------
+probeE    = numpy.zeros((nP, nSamples))
+probeH    = numpy.zeros((nP-1, nSamples))
+probeTime = numpy.zeros(nSamples)
 
 #------Temporal Loop------------------------------------------------------------
-t0 = 0.0
+
 t  = 0.0
 
-for i in range(0, timeSteps):
+for i in range(timeSteps):
    
-    for j in range (0,nP[1]):
+    for j in range (nP-1):
 
-        h[j] = h[j] + cH * (e[j+1] - e[j])     
+        h[j] = h[j] + cH * (e[j+1] - e[j])   
 
-    for j in range (0,nP[1]):
+    h[sP-1] = h[sP-1] + math.exp(-0.5*math.pow((t-delay)/spread, 2)) / imp0
 
-        e[j] = e[j] + cE * (h[j] - h[j-1])    
+    for j in range (1, nP-1):
 
-    e[sP] = e[sP] + math.exp(-0.5*math.pow((t-t0)/spread, 2))   
-    t += dt
+        e[j] = e[j] + cE * (h[j] - h[j-1])        
+    
+    # Source 
+
+    e[sP] = e[sP] + math.exp(-0.5*math.pow((t-delay)/spread, 2))
+
+    # PEC
+    e[ 0] = 0.0
+    e[-1] = 0.0
+
+    probeE[:,i]  = e[:]
+    probeH[:,i]  = h[:]
+    probeTime[i] = t 
+    t           += dt
     
 
 
 # ==== Post-processing ========================================================
 
 # --- Creates animation ---
+fig = plt.figure(figsize=(8,4))
+ax1 = fig.add_subplot(1, 2, 1)
+ax1 = plt.axes(xlim=(gridE[0], gridE[-1]), ylim=(-1.1, 1.1))
+ax1.grid(color='gray', linestyle='--', linewidth=.2)
+ax1.set_xlabel('X coordinate [m]')
+ax1.set_ylabel('Field')
+line1,    = ax1.plot([], [], 'o', markersize=1)
+timeText1 = ax1.text(0.02, 0.95, '', transform=ax1.transAxes)
+
+ax2 = fig.add_subplot(2, 2, 2)
+ax2 = plt.axes(xlim=(gridE[0], gridE[-1]), ylim=(-1.1, 1.1))
+ax2.grid(color='gray', linestyle='--', linewidth=.2)
+# ax2.set_xlabel('X coordinate [m]')
+# ax2.set_ylabel('Magnetic field [T]')
+line2,    = ax2.plot([], [], 'o', markersize=1)
+timeText2 = ax2.text(0.02, 0.95, '', transform=ax2.transAxes)
+
+def init():
+    line1.set_data([], [])
+    timeText1.set_text('')
+    line2.set_data([], [])
+    timeText2.set_text('')
+    return line1, timeText1, line2, timeText2
+
+def animate(i):
+    line1.set_data(gridE, probeE[:,i])
+    timeText1.set_text('Time = %2.1f [ns]' % (probeTime[i]*1e9))
+    line2.set_data(gridH, probeH[:,i]*100)
+    timeText2.set_text('Time = %2.1f [ns]' % (probeTime[i]*1e9))
+    return line1, timeText1, line2, timeText2
+
+anim = animation.FuncAnimation(fig, animate, init_func=init,
+                               frames=nSamples, interval=50, blit=True)
+
+plt.show()
+
+print('=== Program finished ===')
