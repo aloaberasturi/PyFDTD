@@ -60,13 +60,15 @@ for i in range(timeSteps):
 
         h[j] = h[j] + cH * (e[j+1] - e[j])   
 
+    # -- Magnetic Source --
+
     h[sP-1] = h[sP-1] + math.exp(-0.5*math.pow((t-delay)/spread, 2)) / imp0
 
     for j in range (1, nP-1):
 
         e[j] = e[j] + cE * (h[j] - h[j-1])        
     
-    # Source 
+    # -- Electric Source --  
 
     e[sP] = e[sP] + math.exp(-0.5*math.pow((t-delay)/spread, 2))
 
