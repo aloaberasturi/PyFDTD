@@ -59,7 +59,9 @@ for i in range(timeSteps):
 
         h[j] = h[j] + cH * (e[j+1] - e[j])   
 
-    # -- Magnetic Source --
+    # --- Plainwave Source-------------------------------------------------------
+
+        #  Magnetic Field
 
     h[sP-1] = h[sP-1] - cH * math.exp(-0.5*math.pow((t-delay)/spread, 2)) 
 
@@ -67,7 +69,7 @@ for i in range(timeSteps):
 
         e[j] = e[j] + cE * (h[j] - h[j-1])        
     
-    # -- Electric Source --  
+        #  Electric Field  
 
     e[sP] = e[sP] + cE * math.exp(-0.5*math.pow((t- delay + dx/(2*c0) + dt/2)/spread, 2)) / imp0
 
