@@ -6,7 +6,6 @@ import numpy
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-#   TODO Hay algo en la fuente de campo magnetico que falla
 
 #------Physical Constants-------------------------------------------------------
 
@@ -62,7 +61,7 @@ for i in range(timeSteps):
 
     # -- Magnetic Source --
 
-    h[sP-1] = h[sP-1] + math.exp(-0.5*math.pow((t-delay)/spread, 2)) / imp0
+    h[sP-1] = h[sP-1] - cH * math.exp(-0.5*math.pow((t-delay)/spread, 2)) 
 
     for j in range (1, nP-1):
 
@@ -70,7 +69,7 @@ for i in range(timeSteps):
     
     # -- Electric Source --  
 
-    e[sP] = e[sP] + math.exp(-0.5*math.pow((t-delay)/spread, 2))
+    e[sP] = e[sP] + cE * math.exp(-0.5*math.pow((t- delay + dx/(2*c0) + dt/2)/spread, 2)) / imp0
 
     # PEC
     e[ 0] = 0.0
